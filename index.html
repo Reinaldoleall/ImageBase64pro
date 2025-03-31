@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image64 Pro - Conversor Avançado de Imagens para Base64</title>
+  <meta name="description" content="Ferramenta profissional para conversão e compressão de imagens para Base64 com controle de qualidade">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-hover: #3a56d4;
+      --secondary-color: #3f37c9;
+      --success-color: #4cc9f0;
+      --dark-color: #212529;
+      --light-color: #f8f9fa;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+    }
+
+    .navbar-brand i {
+      margin-right: 8px;
+    }
+
+    .main-container {
+      flex: 1;
+      padding: 2rem 0;
+    }
+
+    .tool-card {
+      border: none;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      background-color: white;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-drop-area {
+      border: 2px dashed #ced4da;
+      border-radius: var(--border-radius);
+      background-color: rgba(248, 249, 250, 0.5);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-drop-area:hover {
+      border-color: var(--primary-color);
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+
+    .file-drop-area.active {
+      border-color: var(--primary-color);
+      background-color: rgba(67, 97, 238, 0.1);
+    }
+
+    .file-input-preview {
+      max-height: 300px;
+      object-fit: contain;
+      display: none;
+      border-radius: var(--border-radius);
+    }
+
+    #base64Output {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+    }
+
+    .progress-container {
+      height: 6px;
+      background-color: #e9ecef;
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    .settings-panel {
+      background-color: #f8f9fa;
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #dee2e6;
+    }
+
+    .footer {
+      background-color: var(--dark-color);
+      color: var(--light-color);
+      padding: 1.5rem 0;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .btn-group-responsive {
+        flex-direction: column;
+      }
+      
+      .btn-group-responsive .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    /* Estilo para o modal de visualização */
+    #modalPreview {
+      transition: transform 0.3s ease;
+      transform-origin: center center;
+      max-width: 100%;
+      border-radius: var(--border-radius);
+    }
+
+    /* Estilo para toasts */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1100;
+    }
+
+    .toast {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+      border-radius: var(--border-radius);
+    }
+
+    /* Efeito de loading */
+    .loading-spinner {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    /* Tooltips */
+    [data-bs-toggle="tooltip"] {
+      cursor: pointer;
+    }
+
+    /* Estatísticas */
+    .stats-card {
+      transition: transform 0.3s ease;
+    }
+
+    .stats-card:hover {
+      transform: scale(1.03);
+    }
+
+    /* Dark mode toggle */
+    .dark-mode-toggle {
+      cursor: pointer;
+      margin-left: 1rem;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: #121212;
+      color: #f8f9fa;
+    }
+
+    body.dark-mode .tool-card,
+    body.dark-mode .settings-panel {
+      background-color: #1e1e1e;
+      border-color: #333;
+    }
+
+    body.dark-mode #base64Output {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #f8f9fa;
+    }
+
+    body.dark-mode .file-drop-area {
+      background-color: rgba(30, 30, 30, 0.5);
+      border-color: #444;
+    }
+
+    body.dark-mode .bg-light {
+      background-color: #2d2d2d !important;
+      color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="material-icons">image</i>
+        Image64 Pro
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">
+              <i class="material-icons">info</i> Sobre
+            </a>
+          </li>
+          <li class="nav-item">
+            <span class="nav-link dark-mode-toggle" id="darkModeToggle">
+              <i class="material-icons">brightness_4</i>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <div class="tool-card card mb-4">
+            <div class="card-body">
+              <h2 class="card-title text-center mb-4">
+                <i class="material-icons">settings</i> Conversor de Imagem para Base64
+              </h2>
+              
+              <div class="settings-panel">
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label for="qualityRange" class="form-label">
+                      <i class="material-icons">tune</i> Qualidade da compressão: 
+                      <span id="qualityValue" class="badge bg-primary">70%</span>
+                    </label>
+                    <input type="range" class="form-range" min="10" max="100" value="70" id="qualityRange">
+                    <div class="d-flex justify-content-between">
+                      <small>Menor tamanho</small>
+                      <small>Melhor qualidade</small>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                    <label for="maxSize" class="form-label">
+                      <i class="material-icons">photo_size_select_large</i> Tamanho máximo (px):
+                    </label>
+                    <select class="form-select" id="maxSize">
+                      <option value="512">512px</option>
+                      <option value="1024" selected>1024px</option>
+                      <option value="2048">2048px</option>
+                      <option value="original">Original</option>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-4 mb-3">
+                    <label for="outputFormat" class="form-label">
+                      <i class="material-icons">format_shapes</i> Formato de saída:
+                    </label>
+                    <select class="form-select" id="outputFormat">
+                      <option value="jpeg">JPEG (recomendado)</option>
+                      <option value="png">PNG</option>
+                      <option value="webp">WebP</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <input type="file" id="fileInput" accept="image/*" class="d-none">
+              <div id="dropArea" class="file-drop-area p-5 text-center mb-3 position-relative">
+                <div class="loading-spinner" id="loadingSpinner">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                  </div>
+                </div>
+                <i class="material-icons d-block mb-2" style="font-size: 48px;">cloud_upload</i>
+                <h5>Arraste e solte sua imagem aqui</h5>
+                <p class="text-muted">ou clique para selecionar</p>
+                <img id="imagePreview" class="img-fluid mt-3 file-input-preview">
+              </div>
+              
+              <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="base64Output" class="form-label">
+                  <i class="material-icons">code</i> Resultado Base64:
+                </label>
+                <textarea id="base64Output" class="form-control mb-2" rows="8" placeholder="O código Base64 aparecerá aqui..." readonly></textarea>
+                <div class="d-flex justify-content-between text-muted">
+                  <small id="charCount">0 caracteres</small>
+                  <small id="sizeInfo">0 KB</small>
+                </div>
+              </div>
+              
+              <div class="d-flex gap-2 btn-group-responsive">
+                <button id="copyBtn" class="btn btn-primary flex-grow-1" data-bs-toggle="tooltip" title="Copiar para área de transferência">
+                  <i class="material-icons">content_copy</i> Copiar
+                </button>
+                <button id="clearBtn" class="btn btn-secondary flex-grow-1" data-bs-toggle="tooltip" title="Limpar tudo">
+                  <i class="material-icons">clear</i> Limpar
+                </button>
+                <button id="downloadBtn" class="btn btn-success flex-grow-1" data-bs-toggle="tooltip" title="Download da imagem">
+                  <i class="material-icons">download</i> Download
+                </button>
+                <button id="previewBtn" class="btn btn-info flex-grow-1" data-bs-toggle="tooltip" title="Visualizar imagem">
+                  <i class="material-icons">visibility</i> Visualizar
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="material-icons">insights</i> Estatísticas
+              </h5>
+              <div class="row text-center">
+                <div class="col-md-4">
+                  <div class="p-3 bg-light rounded stats-card">
+                    <h6 class="mb-1">Tamanho Original</h6>
+                    <h4 id="originalSize" class="mb-0">0 KB</h4>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-3 bg-light rounded stats-card">
+                    <h6 class="mb-1">Tamanho Comprimido</h6>
+                    <h4 id="compressedSize" class="mb-0">0 KB</h4>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="p-3 bg-light rounded stats-card">
+                    <h6 class="mb-1">Redução</h6>
+                    <h4 id="reductionPercent" class="mb-0">0%</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de visualização -->
+  <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Visualização da Imagem</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="position-relative" style="min-height: 200px;">
+            <img id="modalPreview" class="img-fluid" style="max-height: 80vh;">
+          </div>
+          <div class="mt-3">
+            <button id="zoomInBtn" class="btn btn-outline-primary btn-sm" data-bs-toggle="tooltip" title="Aumentar zoom">
+              <i class="material-icons">zoom_in</i>
+            </button>
+            <button id="zoomOutBtn" class="btn btn-outline-primary btn-sm mx-2" data-bs-toggle="tooltip" title="Diminuir zoom">
+              <i class="material-icons">zoom_out</i>
+            </button>
+            <button id="resetZoomBtn" class="btn btn-outline-secondary btn-sm" data-bs-toggle="tooltip" title="Resetar zoom">
+              <i class="material-icons">fullscreen_exit</i> Resetar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Sobre -->
+  <div class="modal fade" id="aboutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Sobre o Image64 Pro</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Esta ferramenta profissional permite converter imagens para Base64 com opções avançadas de compressão e otimização.</p>
+          <p><strong>Recursos avançados:</strong></p>
+          <ul>
+            <li>Controle preciso de qualidade (10-100%)</li>
+            <li>Redimensionamento inteligente</li>
+            <li>Múltiplos formatos de saída (JPEG, PNG, WebP)</li>
+            <li>Visualização em tempo real com zoom</li>
+            <li>Estatísticas detalhadas de compressão</li>
+            <li>Modo escuro para melhor experiência visual</li>
+            <li>Interface otimizada para dispositivos móveis</li>
+          </ul>
+          <div class="alert alert-info mt-3">
+            <i class="material-icons">info</i> Dica: Use o formato WebP para melhor relação qualidade/tamanho.
+          </div>
+          <p class="text-muted mt-3">Versão 2.0.0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p class="mb-0">© 2025 Image64 Pro - Todos os direitos reservados</p>
+    </div>
+    
+    <!-- Botão para colocar em qualquer página do seu site -->
+<button id="donationBtn" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #32bbad;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+    </svg>
+    Doar via PIX
+</button>
+
+<!-- Modal que será aberto -->
+<div id="donationModal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+">
+    <div style="
+        background-color: white;
+        padding: 30px;
+        color: black;
+        border-radius: 15px;
+        max-width: 90%;
+        width: 400px;
+        text-align: center;
+        position: relative;
+    ">
+        <span id="closeModal" style="
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        ">&times;</span>
+        
+        <h2 style="color: #32bbad; margin-top: 0;">Apoie nosso trabalho!</h2>
+        <p style="margin-bottom: 20px;">Sua doação ajuda a manter este e outros projetos.</p>
+        
+        <!-- Aqui você pode incluir o conteúdo completo do PIX que criamos anteriormente -->
+        <div class="pix-key" style="
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+        ">00020126500014br.gov.bcb.pix0111135864617120213Reinaldo Leal5204000053039865802BR5925Reinaldo Jose Leal Junior6009Sao Paulo62140510image64pro6304DACC</div>
+        
+        <button id="copyPixBtn" style="
+            background-color: #32bbad;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+            width: 100%;
+        ">Copiar chave PIX</button>
+        
+        <div style="margin: 20px 0;">
+            <p>Ou escaneie o QR Code:</p>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126500014br.gov.bcb.pix0111135864617120213Reinaldo%20Leal5204000053039865802BR5925Reinaldo%20Jose%20Leal%20Junior6009Sao%20Paulo62140510image64pro6304DACC" 
+                 alt="QR Code PIX" 
+                 style="width: 180px; height: 180px; margin: 0 auto; display: block;">
+        </div>
+        
+        <p style="font-size: 12px; color: #888;">Chave PIX: 113.586.461-71 (Reinaldo Jose Leal Junior)</p>
+    </div>
+</div>
+
+<script>
+// Controle do modal
+document.addEventListener('DOMContentLoaded', function() {
+    const donationBtn = document.getElementById('donationBtn');
+    const donationModal = document.getElementById('donationModal');
+    const closeModal = document.getElementById('closeModal');
+    const copyPixBtn = document.getElementById('copyPixBtn');
+    const pixKey = document.querySelector('.pix-key');
+    
+    // Abrir modal
+    donationBtn.addEventListener('click', function() {
+        donationModal.style.display = 'flex';
+    });
+    
+    // Fechar modal
+    closeModal.addEventListener('click', function() {
+        donationModal.style.display = 'none';
+    });
+    
+    // Fechar ao clicar fora
+    donationModal.addEventListener('click', function(e) {
+        if (e.target === donationModal) {
+            donationModal.style.display = 'none';
+        }
+    });
+    
+    // Copiar chave PIX
+    copyPixBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(pixKey.textContent)
+            .then(() => {
+                copyPixBtn.textContent = 'Chave copiada!';
+                setTimeout(() => {
+                    copyPixBtn.textContent = 'Copiar chave PIX';
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Erro ao copiar:', err);
+                // Fallback para navegadores mais antigos
+                const textarea = document.createElement('textarea');
+                textarea.value = pixKey.textContent;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                copyPixBtn.textContent = 'Chave copiada!';
+                setTimeout(() => {
+                    copyPixBtn.textContent = 'Copiar chave PIX';
+                }, 2000);
+            });
+    });
+    
+    // Efeito hover no botão
+    donationBtn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-3px)';
+        this.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.2)';
+    });
+    
+    donationBtn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    });
+});
+</script>
+  </footer>
+
+  <!-- Container para toasts -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+  // Classe principal do aplicativo
+  class Image64Converter {
+    constructor() {
+      this.initElements();
+      this.initEventListeners();
+      this.initTooltips();
+      this.checkDarkModePreference();
+      this.currentFile = null;
+      this.originalFileSize = 0;
+      this.currentScale = 1;
+      this.processingTimeout = null;
+      this.maxFileSize = 10 * 1024 * 1024; // 10MB
+    }
+
+    initElements() {
+      // Elementos do DOM
+      this.elements = {
+        fileInput: document.getElementById('fileInput'),
+        dropArea: document.getElementById('dropArea'),
+        imagePreview: document.getElementById('imagePreview'),
+        base64Output: document.getElementById('base64Output'),
+        qualityRange: document.getElementById('qualityRange'),
+        qualityValue: document.getElementById('qualityValue'),
+        maxSize: document.getElementById('maxSize'),
+        outputFormat: document.getElementById('outputFormat'),
+        copyBtn: document.getElementById('copyBtn'),
+        clearBtn: document.getElementById('clearBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        previewBtn: document.getElementById('previewBtn'),
+        progressContainer: document.getElementById('progressContainer'),
+        progressBar: document.getElementById('progressBar'),
+        charCount: document.getElementById('charCount'),
+        sizeInfo: document.getElementById('sizeInfo'),
+        originalSize: document.getElementById('originalSize'),
+        compressedSize: document.getElementById('compressedSize'),
+        reductionPercent: document.getElementById('reductionPercent'),
+        modalPreview: document.getElementById('modalPreview'),
+        zoomInBtn: document.getElementById('zoomInBtn'),
+        zoomOutBtn: document.getElementById('zoomOutBtn'),
+        resetZoomBtn: document.getElementById('resetZoomBtn'),
+        toastContainer: document.getElementById('toastContainer'),
+        loadingSpinner: document.getElementById('loadingSpinner'),
+        darkModeToggle: document.getElementById('darkModeToggle')
+      };
+    }
+
+    initEventListeners() {
+      // Event Listeners
+      this.elements.dropArea.addEventListener('click', () => this.elements.fileInput.click());
+      this.elements.dropArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+      this.elements.dropArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+      this.elements.dropArea.addEventListener('drop', (e) => this.handleDrop(e));
+      this.elements.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+      this.elements.qualityRange.addEventListener('input', () => this.updateQualityValue());
+      this.elements.copyBtn.addEventListener('click', () => this.copyToClipboard());
+      this.elements.clearBtn.addEventListener('click', () => this.clearAll());
+      this.elements.downloadBtn.addEventListener('click', () => this.downloadBase64());
+      this.elements.previewBtn.addEventListener('click', () => this.previewImage());
+      this.elements.zoomInBtn.addEventListener('click', () => this.zoomIn());
+      this.elements.zoomOutBtn.addEventListener('click', () => this.zoomOut());
+      this.elements.resetZoomBtn.addEventListener('click', () => this.resetZoom());
+      this.elements.darkModeToggle.addEventListener('click', () => this.toggleDarkMode());
+      
+      // Atualização em tempo real
+      this.elements.qualityRange.addEventListener('input', () => this.triggerRealTimeUpdate());
+      this.elements.maxSize.addEventListener('change', () => this.triggerRealTimeUpdate());
+      this.elements.outputFormat.addEventListener('change', () => this.triggerRealTimeUpdate());
+    }
+
+    initTooltips() {
+      // Inicializa tooltips do Bootstrap
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map((tooltipTriggerEl) => {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
+
+    checkDarkModePreference() {
+      // Verifica preferência de dark mode
+      if (localStorage.getItem('darkMode') === 'enabled' || 
+          (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        this.enableDarkMode();
+      }
+    }
+
+    toggleDarkMode() {
+      if (document.body.classList.contains('dark-mode')) {
+        this.disableDarkMode();
+      } else {
+        this.enableDarkMode();
+      }
+    }
+
+    enableDarkMode() {
+      document.body.classList.add('dark-mode');
+      localStorage.setItem('darkMode', 'enabled');
+      this.elements.darkModeToggle.innerHTML = '<i class="material-icons">brightness_7</i>';
+    }
+
+    disableDarkMode() {
+      document.body.classList.remove('dark-mode');
+      localStorage.setItem('darkMode', 'disabled');
+      this.elements.darkModeToggle.innerHTML = '<i class="material-icons">brightness_4</i>';
+    }
+
+    // Atualiza o valor da qualidade exibido
+    updateQualityValue() {
+      this.elements.qualityValue.textContent = `${this.elements.qualityRange.value}%`;
+    }
+
+    // Dispara a atualização em tempo real com debounce
+    triggerRealTimeUpdate() {
+      if (this.processingTimeout) {
+        clearTimeout(this.processingTimeout);
+      }
+      
+      if (this.currentFile) {
+        this.processingTimeout = setTimeout(() => {
+          this.processImage(this.currentFile);
+        }, 300);
+      }
+    }
+
+    // Manipula o arrastar sobre a área de drop
+    handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.elements.dropArea.classList.add('active');
+    }
+
+    // Manipula o sair da área de drop
+    handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.elements.dropArea.classList.remove('active');
+    }
+
+    // Manipula o soltar arquivo na área de drop
+    handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.elements.dropArea.classList.remove('active');
+      
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        this.handleFileSelect({ target: { files } });
+      }
+    }
+
+    // Manipula a seleção de arquivo
+    async handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Verifica se é uma imagem
+      if (!file.type.match('image.*')) {
+        this.showToast('Por favor, selecione um arquivo de imagem válido (JPEG, PNG, etc).', 'error');
+        return;
+      }
+
+      // Verifica tamanho do arquivo
+      if (file.size > this.maxFileSize) {
+        this.showToast(`Arquivo muito grande (máximo ${this.formatFileSize(this.maxFileSize)})`, 'error');
+        return;
+      }
+
+      this.currentFile = file;
+      this.originalFileSize = file.size;
+      this.updateFileStats(this.originalFileSize, 0);
+      
+      try {
+        // Mostra spinner de loading
+        this.elements.loadingSpinner.style.display = 'block';
+        
+        // Mostra preview da imagem original
+        const previewUrl = await this.readFileAsDataURL(file);
+        this.elements.imagePreview.src = previewUrl;
+        this.elements.imagePreview.style.display = 'block';
+        
+        // Processa a imagem
+        await this.processImage(file);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        this.showToast('Erro ao processar a imagem. Tente novamente.', 'error');
+      } finally {
+        this.elements.loadingSpinner.style.display = 'none';
+      }
+    }
+
+    // Lê arquivo como DataURL (Promise-based)
+    readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Processa a imagem com as configurações atuais
+    async processImage(file) {
+      this.showProgress(true);
+      
+      try {
+        const img = await this.loadImage(file);
+        const dataUrl = await this.resizeAndCompress(img);
+        
+        this.elements.base64Output.value = dataUrl;
+        this.updateOutputInfo(dataUrl);
+        
+        // Atualiza estatísticas
+        const compressedSizeBytes = this.calculateBase64Size(dataUrl);
+        this.updateFileStats(this.originalFileSize, compressedSizeBytes);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        this.showToast('Erro ao processar a imagem.', 'error');
+      } finally {
+        this.showProgress(false);
+      }
+    }
+
+    // Carrega imagem (Promise-based)
+    loadImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Redimensiona e comprime a imagem (Promise-based)
+    resizeAndCompress(img) {
+      return new Promise((resolve) => {
+        const maxSizeValue = this.elements.maxSize.value === 'original' ? Infinity : parseInt(this.elements.maxSize.value);
+        const outputFormatValue = this.elements.outputFormat.value;
+        const quality = parseInt(this.elements.qualityRange.value) / 100;
+        
+        let width = img.width;
+        let height = img.height;
+        
+        // Redimensiona se necessário
+        if (maxSizeValue !== Infinity && (width > maxSizeValue || height > maxSizeValue)) {
+          const ratio = Math.min(maxSizeValue / width, maxSizeValue / height);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
+        }
+        
+        // Cria canvas para processamento
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        
+        // Melhora a qualidade de redimensionamento
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Converte para o formato desejado
+        let mimeType;
+        switch (outputFormatValue) {
+          case 'png':
+            mimeType = 'image/png';
+            break;
+          case 'webp':
+            mimeType = 'image/webp';
+            break;
+          default:
+            mimeType = 'image/jpeg';
+        }
+        
+        // Converte para Base64
+        canvas.toBlob((blob) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        }, mimeType, quality);
+      });
+    }
+
+    // Atualiza as informações do output
+    updateOutputInfo(base64String) {
+      const length = base64String.length;
+      const sizeKB = Math.ceil(this.calculateBase64Size(base64String) / 1024);
+      
+      this.elements.charCount.textContent = `${length.toLocaleString()} caracteres`;
+      this.elements.sizeInfo.textContent = `${sizeKB.toLocaleString()} KB`;
+    }
+
+    // Calcula o tamanho em bytes de uma string Base64
+    calculateBase64Size(base64String) {
+      // Remove o prefixo "data:image/..."
+      const base64Data = base64String.split(',')[1] || '';
+      // Fórmula para calcular o tamanho em bytes: (3/4) * length - padding
+      return (base64Data.length * 3) / 4 - (base64Data.endsWith('==') ? 2 : base64Data.endsWith('=') ? 1 : 0);
+    }
+
+    // Atualiza as estatísticas do arquivo
+    updateFileStats(originalSizeBytes, compressedSizeBytes) {
+      const originalKB = Math.ceil(originalSizeBytes / 1024);
+      const compressedKB = Math.ceil(compressedSizeBytes / 1024);
+      const reduction = originalSizeBytes > 0 ? Math.round((1 - compressedSizeBytes / originalSizeBytes) * 100) : 0;
+      
+      this.elements.originalSize.textContent = `${originalKB.toLocaleString()} KB`;
+      this.elements.compressedSize.textContent = `${compressedKB.toLocaleString()} KB`;
+      this.elements.reductionPercent.textContent = `${reduction}%`;
+      
+      // Atualiza cores com base na redução
+      const percentElement = this.elements.reductionPercent;
+      percentElement.className = 'mb-0';
+      
+      if (reduction > 50) {
+        percentElement.classList.add('text-success');
+      } else if (reduction > 20) {
+        percentElement.classList.add('text-warning');
+      } else if (reduction > 0) {
+        percentElement.classList.add('text-info');
+      }
+    }
+
+    // Formata tamanho do arquivo
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Copia o Base64 para a área de transferência
+    async copyToClipboard() {
+      if (!this.elements.base64Output.value) {
+        this.showToast('Nenhum conteúdo para copiar.', 'warning');
+        return;
+      }
+      
+      try {
+        await navigator.clipboard.writeText(this.elements.base64Output.value);
+        this.showToast('Copiado para a área de transferência!', 'success');
+        
+        // Feedback visual
+        this.elements.copyBtn.innerHTML = '<i class="material-icons">check</i> Copiado!';
+        setTimeout(() => {
+          this.elements.copyBtn.innerHTML = '<i class="material-icons">content_copy</i> Copiar';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        this.showToast('Falha ao copiar. Tente novamente.', 'error');
+      }
+    }
+
+    // Limpa tudo
+    clearAll() {
+      this.elements.fileInput.value = '';
+      this.elements.base64Output.value = '';
+      this.elements.imagePreview.src = '';
+      this.elements.imagePreview.style.display = 'none';
+      this.currentFile = null;
+      
+      // Reseta as informações
+      this.elements.charCount.textContent = '0 caracteres';
+      this.elements.sizeInfo.textContent = '0 KB';
+      this.elements.originalSize.textContent = '0 KB';
+      this.elements.compressedSize.textContent = '0 KB';
+      this.elements.reductionPercent.textContent = '0%';
+      this.elements.reductionPercent.className = 'mb-0';
+      
+      this.showToast('Área limpa com sucesso.', 'info');
+    }
+
+    // Faz download do Base64 como arquivo
+    downloadBase64() {
+      if (!this.elements.base64Output.value) {
+        this.showToast('Nenhum conteúdo para download.', 'warning');
+        return;
+      }
+      
+      try {
+        const link = document.createElement('a');
+        link.href = this.elements.base64Output.value;
+        link.download = `image64pro_${new Date().getTime()}.${this.elements.outputFormat.value}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        this.showToast('Download iniciado!', 'success');
+      } catch (error) {
+        console.error('Download failed:', error);
+        this.showToast('Falha ao fazer download.', 'error');
+      }
+    }
+
+    // Mostra a imagem em um modal
+    previewImage() {
+      if (!this.elements.base64Output.value) {
+        this.showToast('Nenhuma imagem para visualizar.', 'warning');
+        return;
+      }
+      
+      this.elements.modalPreview.src = this.elements.base64Output.value;
+      this.currentScale = 1;
+      this.elements.modalPreview.style.transform = `scale(${this.currentScale})`;
+      
+      const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+      previewModal.show();
+    }
+
+    // Controles de zoom
+    zoomIn() {
+      this.currentScale += 0.1;
+      this.elements.modalPreview.style.transform = `scale(${this.currentScale})`;
+    }
+
+    zoomOut() {
+      if (this.currentScale > 0.2) {
+        this.currentScale -= 0.1;
+        this.elements.modalPreview.style.transform = `scale(${this.currentScale})`;
+      }
+    }
+
+    resetZoom() {
+      this.currentScale = 1;
+      this.elements.modalPreview.style.transform = `scale(${this.currentScale})`;
+    }
+
+    // Mostra/esconde a barra de progresso
+    showProgress(show) {
+      this.elements.progressContainer.style.display = show ? 'block' : 'none';
+      if (show) {
+        this.elements.progressBar.style.width = '0%';
+        let width = 0;
+        const interval = setInterval(() => {
+          if (width >= 90) {
+            clearInterval(interval);
+          } else {
+            width += 10;
+            this.elements.progressBar.style.width = width + '%';
+          }
+        }, 200);
+      } else {
+        this.elements.progressBar.style.width = '100%';
+        setTimeout(() => {
+          this.elements.progressBar.style.width = '0%';
+        }, 500);
+      }
+    }
+
+    // Mostra um toast notification
+    showToast(message, type) {
+      const toastEl = document.createElement('div');
+      toastEl.className = `toast show align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+      toastEl.setAttribute('role', 'alert');
+      toastEl.setAttribute('aria-live', 'assertive');
+      toastEl.setAttribute('aria-atomic', 'true');
+      
+      toastEl.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="material-icons me-2">${this.getToastIcon(type)}</i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      `;
+      
+      this.elements.toastContainer.appendChild(toastEl);
+      
+      // Remove o toast após 5 segundos
+      setTimeout(() => {
+        toastEl.classList.remove('show');
+        setTimeout(() => {
+          this.elements.toastContainer.removeChild(toastEl);
+        }, 300);
+      }, 5000);
+    }
+
+    // Retorna o ícone apropriado para o tipo de toast
+    getToastIcon(type) {
+      switch (type) {
+        case 'success': return 'check_circle';
+        case 'error': return 'error';
+        case 'warning': return 'warning';
+        case 'info': return 'info';
+        default: return 'notifications';
+      }
+    }
+  }
+
+  // Inicializa o aplicativo quando o DOM estiver pronto
+  document.addEventListener('DOMContentLoaded', () => {
+    const app = new Image64Converter();
+  });
+</script>
+</body>
+</html>
